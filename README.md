@@ -32,3 +32,5 @@ Minimizar a maior distância entre uma localidade e o centro de distribuição q
 ### Item (b)
 
 Maximizar o total de viagens semanais destinadas a localidades cobertas por pelo menos um centro dentro de um raio `R`.
+
+https://www.overleaf.com/project/6af318e352feda0d4d48af0d/share#ef2d7b8636c7e34da14a378091c96d4a447f2953c62ea351
