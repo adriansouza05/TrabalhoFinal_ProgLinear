@@ -124,15 +124,13 @@ euclidiana:
 d_{ij} = \sqrt{(x_i-x_j)^2+(y_i-y_j)^2}.
 \end{equation}
 
-\subsection{Item (a): minimização da maior distância}
-
+Item (a): minimização da maior distância
 Deve-se escolher exatamente $m$ localidades e atribuir cada
 localidade existente a um dos centros instalados, de modo a
 minimizar a maior distância entre uma localidade e o centro
 responsável pelo seu atendimento.
 
-\subsection{Item (b): maximização das viagens cobertas}
-
+Item (b): maximização das viagens cobertas
 Deve-se escolher exatamente $m$ centros, considerando um
 raio de cobertura $R$. Uma localidade é considerada coberta
 quando existe pelo menos um centro instalado a uma distância
@@ -144,8 +142,6 @@ viagens semanais das localidades cobertas.
 % ------------------------------------------------
 \section{Formulação Matemática}
 
-\subsection{Conjuntos e parâmetros}
-
 \begin{itemize}
     \item $I = \{1,2,\ldots,n\}$: conjunto de localidades;
     \item $C \subseteq I$: localidades elegíveis para receber
@@ -156,11 +152,6 @@ viagens semanais das localidades cobertas.
     \item $v_i$: viagens semanais da localidade $i$;
     \item $R$: raio de cobertura (item (b)).
 \end{itemize}
-
-% ------------------------------------------------
-% 3.1 ITEM A
-% ------------------------------------------------
-\subsection{Modelo do item (a)}
 
 \subsubsection*{Variáveis de decisão}
 
@@ -225,61 +216,9 @@ z_j\in\{0,1\},\quad a_{ij}\in\{0,1\},\quad D\ge 0.
 \end{equation}
 
 % ------------------------------------------------
-% 3.2 ITEM B
-% ------------------------------------------------
-\subsection{Modelo do item (b)}
-
-\subsubsection*{Variáveis de decisão}
-
-$z_j$ definida como no item (a) e
-\begin{equation}
-u_i = \begin{cases}
-1, & \text{se a localidade } i \text{ está coberta},\\
-0, & \text{caso contrário.}
-\end{cases}
-\end{equation}
-
-Defini-se ainda
-\begin{equation}
-N_i(R) = \{\,j\in C : d_{ij}\le R\,\}.
-\end{equation}
-
-\subsubsection*{Função objetivo}
-
-\begin{equation}
-\boxed{\max \; \sum_{i\in I} v_i\, u_i}
-\end{equation}
-
-\subsubsection*{Restrições e justificativas}
-
-\textbf{(R6) Número exato de centros.}
-\begin{equation}
-\sum_{j\in C} z_j = m.
-\end{equation}
-
-\textbf{(R7) Cobertura condicionada à existência de centro
-dentro do raio.}
-\begin{equation}
-u_i \le \sum_{j\in N_i(R)} z_j, \qquad \forall i\in I.
-\end{equation}
-Justificativa: se nenhum centro for aberto dentro do raio,
-o lado direito é 0 e $u_i$ é forçado a 0. Como $v_i>0$, o
-solver faz $u_i=1$ sempre que houver cobertura, ativando a
-variável. Note-se que a restrição é suficiente para o modelo
-de maximização, pois não há incentivo a deixar $u_i=0$ quando
-há cobertura disponível.
-
-\textbf{(R8) Domínios.}
-\begin{equation}
-z_j\in\{0,1\},\quad u_i\in\{0,1\}.
-\end{equation}
-
-% ------------------------------------------------
 % 4. IMPLEMENTAÇÃO COMPUTACIONAL
 % ------------------------------------------------
 \section{Implementação Computacional}
-
-\subsection{Solver e ambiente}
 
 Os modelos foram implementados em Python 3, com a biblioteca
 \texttt{SciPy} e a função \texttt{scipy.optimize.milp}, que
@@ -294,8 +233,6 @@ Cada instância é executada com:
     otimalidade exata, para obter o gap reportado);
     \item \texttt{disp = False} (sem saída verbosa no console).
 \end{itemize}
-
-\subsection{Leitura dos dados}
 
 Cada arquivo \texttt{inst\_n\_m.txt} tem o seguinte formato:
 
@@ -312,8 +249,6 @@ xn yn vn en
 Após a leitura, as distâncias euclidianas são calculadas
 para todos os pares $(i,j)$.
 
-\subsection{Extrato dos resultados}
-
 Ao final de cada execução, o código registra:
 \begin{itemize}
     \item valor da função objetivo;
@@ -328,8 +263,6 @@ Ao final de cada execução, o código registra:
 Para o item (b), como o modelo é de maximização, a função
 objetivo é reescrita como $-\sum_i v_i u_i$ (minimização),
 e o valor reportado é o negativo de \texttt{res.fun}.
-
-\subsection{Relação com os métodos vistos em aula}
 
 O método Simplex estudado em aula resolve problemas de
 programação linear contínua. Como os modelos desta questão
@@ -349,8 +282,6 @@ de localidades e centros. As colunas obrigatórias são:
 tempo computacional, status do solver, gap de otimalidade e
 bound. Quando a solução é ótima, tem-se gap $=0$ e bound
 igual ao valor da função objetivo.
-
-\subsection{Resultados do item (a)}
 
 A Tabela~\ref{tab:resultado_a} apresenta os resultados
 obtidos para a minimização da maior distância.
@@ -387,8 +318,6 @@ Apêndice~\ref{ap:codigo}), que não tem essa limitação, com
 \texttt{time\_limit = 3600} s. A coluna de tempo deve ser
 preenchida com o valor medido na execução.
 
-\subsection{Resultados do item (b)}
-
 A Tabela~\ref{tab:resultado_b} apresenta os resultados
 obtidos para a maximização das viagens cobertas.
 
@@ -424,8 +353,6 @@ instância não seja resolvida até a otimalidade em 3600 s,
 deve-se reportar o melhor valor encontrado, o bound
 (\texttt{res.mip\_dual\_bound}) e o gap
 (\texttt{res.mip\_gap}).
-
-\subsection{Análise comparativa}
 
 No item (a), a prioridade é reduzir a maior distância de
 atendimento, o que leva a uma distribuição espacial
@@ -481,9 +408,6 @@ estudadas.
     \item Material de aula: Gabarito da Revisão para a Prova.
     \item Arquivos de dados das instâncias disponibilizadas
     para o Trabalho Final 1.
-    \item Documentação da biblioteca SciPy:
-    \url{https://docs.scipy.org/doc/scipy/reference/optimize.milp.html}.
-    \item HiGHS --- \url{https://highs.dev/}.
 \end{itemize}
 
 % ------------------------------------------------
