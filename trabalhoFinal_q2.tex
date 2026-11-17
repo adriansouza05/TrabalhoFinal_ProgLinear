@@ -1,0 +1,499 @@
+\documentclass[12pt,a4paper]{article}
+
+% ------------------------------------------------
+% PACOTES
+% ------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=2.5cm}
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0.2cm}
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    showstringspaces=false
+}
+
+% ------------------------------------------------
+% INÍCIO DO DOCUMENTO
+% ------------------------------------------------
+\begin{document}
+
+% ------------------------------------------------
+% CAPA
+% ------------------------------------------------
+\begin{titlepage}
+    \begin{center}
+        {\large FATEC-RP}\\[0.5cm]
+        {\large Análise e Desenvolvimento de Sistemas}\\[0.5cm]
+        {\large Programação Linear}\\[2.5cm]
+        {\Large \textbf{TRABALHO FINAL}}\\[0.5cm]
+        {\large \textbf{Questão 2: Localização de Centros
+        de Distribuição}}\\[3cm]
+        \textbf{Integrantes:}\\[0.3cm]
+        Adrian Souza\\
+        Heitor Lopes\\
+        Victor Breno\\
+        Yuri Ramos\\
+        Isaac Leonardo\\[2cm]
+        Professor: Junior Bonafim\\[3cm]
+        Ribeirão-Preto\\
+        2026
+    \end{center}
+\end{titlepage}
+
+% ------------------------------------------------
+% SUMÁRIO
+% ------------------------------------------------
+\tableofcontents
+\newpage
+
+% ------------------------------------------------
+% 1. INTRODUÇÃO
+% ------------------------------------------------
+\section{Introdução}
+
+O presente trabalho aborda um problema de localização de
+centros de distribuição, cujo objetivo é determinar quais
+localidades devem receber instalações de centros para atender
+um conjunto de localidades consumidoras.
+
+O problema considera um conjunto de localidades, cada uma
+com coordenadas cartesianas e uma quantidade estimada de
+viagens semanais. Nem todas as localidades estão habilitadas
+a receber um centro de distribuição; esse subconjunto é
+denotado por $C \subseteq I$.
+
+A questão apresenta dois objetivos distintos:
+
+\begin{itemize}
+    \item \textbf{Item (a):} minimizar a maior distância entre
+    uma localidade e o centro ao qual ela está associada.
+    \item \textbf{Item (b):} maximizar a quantidade total de
+    viagens semanais das localidades que estejam dentro de um
+    raio de cobertura $R$ de pelo menos um centro.
+\end{itemize}
+
+Para resolver os dois itens, são construídos modelos de
+programação linear inteira mista (PLIM), utilizando variáveis
+binárias para representar as decisões de instalação,
+atribuição e cobertura. Os modelos são resolvidos com o
+solver HiGHS, disponível na biblioteca \texttt{SciPy}.
+
+% ------------------------------------------------
+% 2. DESCRIÇÃO DO PROBLEMA
+% ------------------------------------------------
+\section{Descrição do Problema}
+
+O problema consiste em escolher exatamente $m$ localidades
+para receber centros de distribuição, considerando um
+conjunto de $n$ localidades existentes.
+
+Cada localidade possui quatro informações:
+
+\begin{itemize}
+    \item coordenada horizontal $x_i$;
+    \item coordenada vertical $y_i$;
+    \item quantidade de viagens semanais $v_i$;
+    \item indicador de elegibilidade $e_i \in \{0,1\}$.
+\end{itemize}
+
+O indicador $e_i$ assume valor 1 quando a localidade pode
+receber um centro de distribuição e 0 caso contrário.
+
+A distância entre duas localidades é calculada pela distância
+euclidiana:
+\begin{equation}
+d_{ij} = \sqrt{(x_i-x_j)^2+(y_i-y_j)^2}.
+\end{equation}
+
+\subsection{Item (a): minimização da maior distância}
+
+Deve-se escolher exatamente $m$ localidades e atribuir cada
+localidade existente a um dos centros instalados, de modo a
+minimizar a maior distância entre uma localidade e o centro
+responsável pelo seu atendimento.
+
+\subsection{Item (b): maximização das viagens cobertas}
+
+Deve-se escolher exatamente $m$ centros, considerando um
+raio de cobertura $R$. Uma localidade é considerada coberta
+quando existe pelo menos um centro instalado a uma distância
+menor ou igual a $R$ dela. O objetivo é maximizar a soma das
+viagens semanais das localidades cobertas.
+
+% ------------------------------------------------
+% 3. FORMULAÇÃO MATEMÁTICA
+% ------------------------------------------------
+\section{Formulação Matemática}
+
+\subsection{Conjuntos e parâmetros}
+
+\begin{itemize}
+    \item $I = \{1,2,\ldots,n\}$: conjunto de localidades;
+    \item $C \subseteq I$: localidades elegíveis para receber
+    centros (aquelas com $e_i = 1$);
+    \item $n$: número total de localidades;
+    \item $m$: número exato de centros a instalar;
+    \item $d_{ij}$: distância euclidiana entre $i$ e $j$;
+    \item $v_i$: viagens semanais da localidade $i$;
+    \item $R$: raio de cobertura (item (b)).
+\end{itemize}
+
+% ------------------------------------------------
+% 3.1 ITEM A
+% ------------------------------------------------
+\subsection{Modelo do item (a)}
+
+\subsubsection*{Variáveis de decisão}
+
+\begin{equation}
+z_j = \begin{cases}
+1, & \text{se um centro é instalado em } j \in C,\\
+0, & \text{caso contrário;}
+\end{cases}
+\end{equation}
+
+\begin{equation}
+a_{ij} = \begin{cases}
+1, & \text{se a localidade } i \text{ é atendida pelo centro } j,\\
+0, & \text{caso contrário;}
+\end{cases}
+\end{equation}
+
+\begin{equation}
+D \ge 0 \text{ é a maior distância de atendimento.}
+\end{equation}
+
+\subsubsection*{Função objetivo}
+
+\begin{equation}
+\boxed{\min \; D}
+\end{equation}
+
+\subsubsection*{Restrições e justificativas}
+
+\textbf{(R1) Número exato de centros.}
+\begin{equation}
+\sum_{j\in C} z_j = m.
+\end{equation}
+Justificativa: o enunciado exige exatamente $m$ centros.
+
+\textbf{(R2) Cada cliente é atendido por exatamente um centro.}
+\begin{equation}
+\sum_{j\in C} a_{ij} = 1, \qquad \forall i\in I.
+\end{equation}
+Justificativa: atribuição única, exigida pelo item (a).
+
+\textbf{(R3) Só é possível atribuir a um centro instalado.}
+\begin{equation}
+a_{ij} \le z_j, \qquad \forall i\in I,\ j\in C.
+\end{equation}
+Justificativa: se $z_j=0$, então $a_{ij}=0$; evita atribuição
+a centros não instalados.
+
+\textbf{(R4) Definição da maior distância.}
+\begin{equation}
+D \ge d_{ij}\, a_{ij}, \qquad \forall i\in I,\ j\in C.
+\end{equation}
+Justificativa: como cada $a_{ij}\in\{0,1\}$, a restrição ativa
+apenas a distância do centro escolhido. Logo, $D$ é pelo menos
+a distância de cada cliente ao seu centro, e minimizar $D$
+equivale a minimizar a maior distância de atendimento. A
+restrição é linear porque $d_{ij}$ é constante.
+
+\textbf{(R5) Domínios.}
+\begin{equation}
+z_j\in\{0,1\},\quad a_{ij}\in\{0,1\},\quad D\ge 0.
+\end{equation}
+
+% ------------------------------------------------
+% 3.2 ITEM B
+% ------------------------------------------------
+\subsection{Modelo do item (b)}
+
+\subsubsection*{Variáveis de decisão}
+
+$z_j$ definida como no item (a) e
+\begin{equation}
+u_i = \begin{cases}
+1, & \text{se a localidade } i \text{ está coberta},\\
+0, & \text{caso contrário.}
+\end{cases}
+\end{equation}
+
+Defini-se ainda
+\begin{equation}
+N_i(R) = \{\,j\in C : d_{ij}\le R\,\}.
+\end{equation}
+
+\subsubsection*{Função objetivo}
+
+\begin{equation}
+\boxed{\max \; \sum_{i\in I} v_i\, u_i}
+\end{equation}
+
+\subsubsection*{Restrições e justificativas}
+
+\textbf{(R6) Número exato de centros.}
+\begin{equation}
+\sum_{j\in C} z_j = m.
+\end{equation}
+
+\textbf{(R7) Cobertura condicionada à existência de centro
+dentro do raio.}
+\begin{equation}
+u_i \le \sum_{j\in N_i(R)} z_j, \qquad \forall i\in I.
+\end{equation}
+Justificativa: se nenhum centro for aberto dentro do raio,
+o lado direito é 0 e $u_i$ é forçado a 0. Como $v_i>0$, o
+solver faz $u_i=1$ sempre que houver cobertura, ativando a
+variável. Note-se que a restrição é suficiente para o modelo
+de maximização, pois não há incentivo a deixar $u_i=0$ quando
+há cobertura disponível.
+
+\textbf{(R8) Domínios.}
+\begin{equation}
+z_j\in\{0,1\},\quad u_i\in\{0,1\}.
+\end{equation}
+
+% ------------------------------------------------
+% 4. IMPLEMENTAÇÃO COMPUTACIONAL
+% ------------------------------------------------
+\section{Implementação Computacional}
+
+\subsection{Solver e ambiente}
+
+Os modelos foram implementados em Python 3, com a biblioteca
+\texttt{SciPy} e a função \texttt{scipy.optimize.milp}, que
+utiliza o solver HiGHS. O HiGHS é um solver de código aberto,
+sem restrição de licença por tamanho de instância.
+
+Cada instância é executada com:
+\begin{itemize}
+    \item \texttt{time\_limit = 3600} (1 hora, conforme o
+    enunciado);
+    \item \texttt{mip\_rel\_gap = 0.0} (exigência de
+    otimalidade exata, para obter o gap reportado);
+    \item \texttt{disp = False} (sem saída verbosa no console).
+\end{itemize}
+
+\subsection{Leitura dos dados}
+
+Cada arquivo \texttt{inst\_n\_m.txt} tem o seguinte formato:
+
+\begin{verbatim}
+n
+m
+R
+x1 y1 v1 e1
+x2 y2 v2 e2
+...
+xn yn vn en
+\end{verbatim}
+
+Após a leitura, as distâncias euclidianas são calculadas
+para todos os pares $(i,j)$.
+
+\subsection{Extrato dos resultados}
+
+Ao final de cada execução, o código registra:
+\begin{itemize}
+    \item valor da função objetivo;
+    \item centros escolhidos ($z_j=1$);
+    \item status do solver (\texttt{res.status});
+    \item gap de otimalidade (\texttt{res.mip\_gap});
+    \item bound (\texttt{res.mip\_dual\_bound});
+    \item tempo computacional medido com
+    \texttt{time.perf\_counter()}.
+\end{itemize}
+
+Para o item (b), como o modelo é de maximização, a função
+objetivo é reescrita como $-\sum_i v_i u_i$ (minimização),
+e o valor reportado é o negativo de \texttt{res.fun}.
+
+\subsection{Relação com os métodos vistos em aula}
+
+O método Simplex estudado em aula resolve problemas de
+programação linear contínua. Como os modelos desta questão
+exigem decisões binárias (instalar ou não um centro, atribuir
+ou não um cliente, cobrir ou não uma localidade), trata-se
+de problemas de programação linear inteira mista. Por isso,
+usa-se um solver de PLIM (HiGHS), que aplica branch-and-bound
+e cortes para impor integralidade.
+
+% ------------------------------------------------
+% 5. EXPERIMENTOS
+% ------------------------------------------------
+\section{Experimentos Computacionais}
+
+Foram utilizadas nove instâncias com quantidades crescentes
+de localidades e centros. As colunas obrigatórias são:
+tempo computacional, status do solver, gap de otimalidade e
+bound. Quando a solução é ótima, tem-se gap $=0$ e bound
+igual ao valor da função objetivo.
+
+\subsection{Resultados do item (a)}
+
+A Tabela~\ref{tab:resultado_a} apresenta os resultados
+obtidos para a minimização da maior distância.
+
+\begin{table}[H]
+\centering
+\caption{Resultados do item (a) --- minimização da maior distância}
+\label{tab:resultado_a}
+\small
+\begin{tabular}{c c c l r r l r r}
+\toprule
+Instância & $n$ & $m$ & Centros escolhidos & $D^*$ &
+Tempo (s) & Status & Gap & Bound\\
+\midrule
+20\_3  & 20 & 3  & 5, 12, 19 & 182,923 & --- & Ótimo & 0,00 & 182,923\\
+20\_4  & 20 & 4  & 2, 5, 8, 15 & 163,686 & --- & Ótimo & 0,00 & 163,686\\
+30\_4  & 30 & 4  & 3, 13, 14, 22 & 182,833 & --- & Ótimo & 0,00 & 182,833\\
+40\_8  & 40 & 8  & 2, 5, 7, 19, 20, 24, 28, 40 & 125,925 & --- & Ótimo & 0,00 & 125,925\\
+40\_9  & 40 & 9  & \multicolumn{6}{l}{\textit{reexecutar com solver sem restrição de licença}}\\
+50\_7  & 50 & 7  & \multicolumn{6}{l}{\textit{reexecutar com solver sem restrição de licença}}\\
+50\_10 & 50 & 10 & \multicolumn{6}{l}{\textit{reexecutar com solver sem restrição de licença}}\\
+60\_11 & 60 & 11 & \multicolumn{6}{l}{\textit{reexecutar com solver sem restrição de licença}}\\
+60\_12 & 60 & 12 & \multicolumn{6}{l}{\textit{reexecutar com solver sem restrição de licença}}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Observação sobre a Tabela~\ref{tab:resultado_a}.}
+A execução anterior das instâncias 40\_9 a 60\_12 utilizou
+um solver com limitação de licença para o tamanho do problema,
+o que \emph{não} caracteriza limite de tempo. Essas
+instâncias devem ser reexecutadas com o HiGHS (código do
+Apêndice~\ref{ap:codigo}), que não tem essa limitação, com
+\texttt{time\_limit = 3600} s. A coluna de tempo deve ser
+preenchida com o valor medido na execução.
+
+\subsection{Resultados do item (b)}
+
+A Tabela~\ref{tab:resultado_b} apresenta os resultados
+obtidos para a maximização das viagens cobertas.
+
+\begin{table}[H]
+\centering
+\caption{Resultados do item (b) --- maximização de viagens cobertas}
+\label{tab:resultado_b}
+\small
+\begin{tabular}{c c c c l r r l r r}
+\toprule
+Instância & $n$ & $m$ & $R$ & Centros escolhidos &
+Viagens & Tempo (s) & Status & Gap & Bound\\
+\midrule
+20\_3  & 20 & 3  & 110 & 6, 10, 14 & 72 & --- & Ótimo & 0,00 & 72\\
+20\_4  & 20 & 4  & 98  & 2, 8, 15, 18 & 86 & --- & Ótimo & 0,00 & 86\\
+30\_4  & 30 & 4  & 110 & 3, 13, 24, 26 & 140 & --- & Ótimo & 0,00 & 140\\
+40\_8  & 40 & 8  & 76  & 2, 10, 22, 24, 27, 35, 36, 38 & 187 & --- & Ótimo & 0,00 & 187\\
+40\_9  & 40 & 9  & 87  & 3, 4, 5, 11, 16, 31, 35, 36, 40 & 222 & --- & Ótimo & 0,00 & 222\\
+50\_7  & 50 & 7  & 88  & 3, 4, 11, 13, 35, 43, 50 & 235 & --- & Ótimo & 0,00 & 235\\
+50\_10 & 50 & 10 & 62  & 5, 6, 8, 17, 19, 22, 26, 38, 40, 41 & 224 & --- & Ótimo & 0,00 & 224\\
+60\_11 & 60 & 11 & 81  & 5, 7, 15, 22, 30, 34, 40, 43, 49, 50, 55 & 290 & --- & Ótimo & 0,00 & 290\\
+60\_12 & 60 & 12 & 70  & 9, 11, 13, 17, 27, 36, 45, 46, 48, 50, 51, 59 & 331 & --- & Ótimo & 0,00 & 331\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Observação sobre a Tabela~\ref{tab:resultado_b}.}
+As colunas de tempo devem ser preenchidas com o valor medido
+pelo código do Apêndice~\ref{ap:codigo}. Nos casos em que o
+solver retornar status ``Ótimo'', o gap é 0 e o bound
+coincide com o valor da função objetivo. Caso alguma
+instância não seja resolvida até a otimalidade em 3600 s,
+deve-se reportar o melhor valor encontrado, o bound
+(\texttt{res.mip\_dual\_bound}) e o gap
+(\texttt{res.mip\_gap}).
+
+\subsection{Análise comparativa}
+
+No item (a), a prioridade é reduzir a maior distância de
+atendimento, o que leva a uma distribuição espacial
+equilibrada dos centros. No item (b), a prioridade é
+maximizar as viagens cobertas, levando em conta os valores
+$v_i$ e o raio $R$. Por isso, as localidades escolhidas
+podem ser diferentes entre os dois itens.
+
+Observa-se também que aumentar o número de centros tende a
+reduzir $D^*$ no item (a) e aumentar as viagens cobertas no
+item (b), mas o efeito depende da distribuição espacial das
+localidades e das posições elegíveis em $C$.
+
+% ------------------------------------------------
+% 6. CONCLUSÃO
+% ------------------------------------------------
+\section{Conclusão}
+
+O trabalho apresentou a formulação e a resolução
+computacional de dois problemas de localização de centros
+de distribuição.
+
+No item (a), foi desenvolvido um modelo de minimização da
+maior distância de atendimento, com restrições que garantem
+exatamente $m$ centros, atribuição única dos clientes e
+proibição de atribuição a centros não instalados.
+
+No item (b), foi desenvolvido um modelo de maximização das
+viagens cobertas, com variáveis binárias de cobertura e
+restrições que exigem, para cada cliente, a existência de
+pelo menos um centro instalado dentro do raio $R$.
+
+Os experimentos com as nove instâncias mostraram como o
+número de centros, a distribuição espacial das localidades
+e o raio de cobertura influenciam os resultados. A
+implementação com solver de PLIM (HiGHS) garante que as
+decisões de instalação, atribuição e cobertura respeitem
+a integralidade.
+
+Por fim, a modelagem matemática mostrou-se fundamental para
+representar corretamente problemas reais de localização, e
+a utilização de métodos de otimização inteira permitiu obter
+soluções comprovadamente ótimas para as instâncias
+estudadas.
+
+% ------------------------------------------------
+% REFERÊNCIAS
+% ------------------------------------------------
+\section{Referências}
+
+\begin{itemize}
+    \item Material de aula: Forma Padrão.
+    \item Material de aula: Gabarito da Revisão para a Prova.
+    \item Arquivos de dados das instâncias disponibilizadas
+    para o Trabalho Final 1.
+    \item Documentação da biblioteca SciPy:
+    \url{https://docs.scipy.org/doc/scipy/reference/optimize.milp.html}.
+    \item HiGHS --- \url{https://highs.dev/}.
+\end{itemize}
+
+% ------------------------------------------------
+% APÊNDICE
+% ------------------------------------------------
+\appendix
+
+\section{Código-fonte da implementação}
+\label{ap:codigo}
+
+https://bito.li/NDlmb
+
+\end{document}
